@@ -39,6 +39,9 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Union</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">spdx_python_model.bindings</span><span class="w"> </span><span class="kn">import</span> <span class="n">v3_0_1</span> <span class="k">as</span> <span class="n">spdx3</span>
@@ -165,7 +168,7 @@
 <a class="viewcode-back" href="../../ntia_conformance_checker.html#ntia_conformance_checker.spdx3_utils.get_boms_from_spdx_document">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">get_boms_from_spdx_document</span><span class="p">(</span>
     <span class="n">spdx_doc</span><span class="p">:</span> <span class="n">spdx3</span><span class="o">.</span><span class="n">SpdxDocument</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">spdx3</span><span class="o">.</span><span class="n">Bom</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">spdx3</span><span class="o">.</span><span class="n">Bom</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Retrieve the BOMs that are rootElements of an SPDX 3 SpdxDocument.</span>
 
@@ -173,16 +176,13 @@
 <span class="sd">        spdx_doc (spdx3.SpdxDocument | None): The SPDX 3 SpdxDocument.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        list[spdx3.Bom] | None: A list of BOMs if found, otherwise None.</span>
+<span class="sd">        list[spdx3.Bom]: A list of BOMs if found, otherwise an empty list.</span>
 <span class="sd">    """</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">spdx_doc</span><span class="p">:</span>
-        <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="p">[]</span>
 
-    <span class="n">root_elements</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">spdx3</span><span class="o">.</span><span class="n">Bom</span><span class="p">]</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">spdx_doc</span><span class="p">,</span> <span class="s2">"rootElement"</span><span class="p">,</span> <span class="p">[])</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">root_elements</span><span class="p">:</span>
-        <span class="k">return</span> <span class="kc">None</span>
-
-    <span class="k">return</span> <span class="n">root_elements</span></div>
+    <span class="n">root_elements</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">spdx_doc</span><span class="p">,</span> <span class="s2">"rootElement"</span><span class="p">,</span> <span class="p">[])</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">elem</span> <span class="k">for</span> <span class="n">elem</span> <span class="ow">in</span> <span class="n">root_elements</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">elem</span><span class="p">,</span> <span class="n">spdx3</span><span class="o">.</span><span class="n">Bom</span><span class="p">)]</span></div>
 
 
 
@@ -190,7 +190,7 @@
 <a class="viewcode-back" href="../../ntia_conformance_checker.html#ntia_conformance_checker.spdx3_utils.get_packages_from_bom">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">get_packages_from_bom</span><span class="p">(</span>
     <span class="n">bom</span><span class="p">:</span> <span class="n">spdx3</span><span class="o">.</span><span class="n">Bom</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">spdx3</span><span class="o">.</span><span class="n">software_Package</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">spdx3</span><span class="o">.</span><span class="n">software_Package</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Retrieve the /Software/Packages that are rootElements of an SPDX 3 BOM.</span>
 
@@ -198,16 +198,13 @@
 <span class="sd">        bom (spdx3.Bom | None): The SPDX 3 Bom.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        list[spdx3.software_Package] | None: A list of packages if found, otherwise None.</span>
+<span class="sd">        list[spdx3.software_Package]: A list of packages if found, otherwise an empty list.</span>
 <span class="sd">    """</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">bom</span><span class="p">:</span>
-        <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="p">[]</span>
 
-    <span class="n">root_elements</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">spdx3</span><span class="o">.</span><span class="n">software_Package</span><span class="p">]</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">bom</span><span class="p">,</span> <span class="s2">"rootElement"</span><span class="p">,</span> <span class="p">[])</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">root_elements</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">root_elements</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
-        <span class="k">return</span> <span class="kc">None</span>
-
-    <span class="k">return</span> <span class="n">root_elements</span></div>
+    <span class="n">root_elements</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">bom</span><span class="p">,</span> <span class="s2">"rootElement"</span><span class="p">,</span> <span class="p">[])</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">elem</span> <span class="k">for</span> <span class="n">elem</span> <span class="ow">in</span> <span class="n">root_elements</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">elem</span><span class="p">,</span> <span class="n">spdx3</span><span class="o">.</span><span class="n">software_Package</span><span class="p">)]</span></div>
 
 
 
@@ -282,7 +279,12 @@
 <div class="viewcode-block" id="get_all_packages">
 <a class="viewcode-back" href="../../ntia_conformance_checker.html#ntia_conformance_checker.spdx3_utils.get_all_packages">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">get_all_packages</span><span class="p">(</span><span class="n">object_set</span><span class="p">:</span> <span class="n">spdx3</span><span class="o">.</span><span class="n">SHACLObjectSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">set</span><span class="p">[</span><span class="n">spdx3</span><span class="o">.</span><span class="n">software_Package</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">"""Retrieve all /Software/Package objects from an SHACLObjectSet."""</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Retrieve all /Software/Package objects from an SHACLObjectSet.</span>
+
+<span class="sd">    This includes instances of software_Package and its subclasses,</span>
+<span class="sd">    such as ai_AIPackage and dataset_DatasetPackage.</span>
+<span class="sd">    """</span>
     <span class="n">packages</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="n">spdx3</span><span class="o">.</span><span class="n">software_Package</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span>
         <span class="n">object_set</span><span class="o">.</span><span class="n">foreach_type</span><span class="p">(</span><span class="n">spdx3</span><span class="o">.</span><span class="n">software_Package</span><span class="p">)</span>
     <span class="p">)</span>
@@ -336,6 +338,131 @@
                 <span class="k">return</span> <span class="kc">True</span>
 
     <span class="k">return</span> <span class="kc">False</span></div>
+
+
+
+<div class="viewcode-block" id="get_distribution_artifacts_map">
+<a class="viewcode-back" href="../../ntia_conformance_checker.html#ntia_conformance_checker.spdx3_utils.get_distribution_artifacts_map">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_distribution_artifacts_map</span><span class="p">(</span>
+    <span class="n">object_set</span><span class="p">:</span> <span class="n">spdx3</span><span class="o">.</span><span class="n">SHACLObjectSet</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="n">spdx3</span><span class="o">.</span><span class="n">software_File</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Create a mapping of package spdxId to their linked software_File distribution artifacts.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        dict[str, list[spdx3.software_File]]: A dictionary mapping package spdxId to a list of</span>
+<span class="sd">        linked software_File objects.</span>
+<span class="sd">    """</span>
+    <span class="n">artifact_map</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="n">spdx3</span><span class="o">.</span><span class="n">software_File</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="n">file_map</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">spdx3</span><span class="o">.</span><span class="n">software_File</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">file_obj</span> <span class="ow">in</span> <span class="n">object_set</span><span class="o">.</span><span class="n">foreach_type</span><span class="p">(</span><span class="n">spdx3</span><span class="o">.</span><span class="n">software_File</span><span class="p">):</span>
+        <span class="n">file_id</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">file_obj</span><span class="p">,</span> <span class="s2">"spdxId"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">file_id</span><span class="p">:</span>
+            <span class="n">file_map</span><span class="p">[</span><span class="n">file_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">file_obj</span>
+
+    <span class="k">for</span> <span class="n">from_id</span><span class="p">,</span> <span class="n">to_ids</span> <span class="ow">in</span> <span class="n">iter_relationships_by_type</span><span class="p">(</span>
+        <span class="n">object_set</span><span class="p">,</span> <span class="s2">"hasDistributionArtifact"</span>
+    <span class="p">):</span>
+        <span class="n">files</span> <span class="o">=</span> <span class="p">[</span><span class="n">file_map</span><span class="p">[</span><span class="n">to_id</span><span class="p">]</span> <span class="k">for</span> <span class="n">to_id</span> <span class="ow">in</span> <span class="n">to_ids</span> <span class="k">if</span> <span class="n">to_id</span> <span class="ow">in</span> <span class="n">file_map</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">files</span><span class="p">:</span>
+            <span class="n">artifact_map</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">from_id</span><span class="p">,</span> <span class="p">[])</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">files</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">artifact_map</span></div>
+
+
+
+<div class="viewcode-block" id="has_sha512_hash">
+<a class="viewcode-back" href="../../ntia_conformance_checker.html#ntia_conformance_checker.spdx3_utils.has_sha512_hash">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">has_sha512_hash</span><span class="p">(</span><span class="n">file_obj</span><span class="p">:</span> <span class="n">spdx3</span><span class="o">.</span><span class="n">SHACLObject</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Check if a software_File has a SHA-512 hash declared in its verifiedUsing property.</span>
+<span class="sd">    """</span>
+    <span class="n">verified_using</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">file_obj</span><span class="p">,</span> <span class="s2">"verifiedUsing"</span><span class="p">,</span> <span class="p">[])</span>
+    <span class="k">for</span> <span class="n">verification</span> <span class="ow">in</span> <span class="n">verified_using</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">verification</span><span class="p">,</span> <span class="n">spdx3</span><span class="o">.</span><span class="n">Hash</span><span class="p">):</span>
+            <span class="n">algorithm</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">verification</span><span class="p">,</span> <span class="s2">"algorithm"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
+            <span class="n">hash_value</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">verification</span><span class="p">,</span> <span class="s2">"hashValue"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">algorithm</span> <span class="ow">and</span> <span class="s2">"sha512"</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">algorithm</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">and</span> <span class="n">hash_value</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="k">return</span> <span class="kc">False</span></div>
+
+
+
+<div class="viewcode-block" id="get_dependency_relationships_completeness">
+<a class="viewcode-back" href="../../ntia_conformance_checker.html#ntia_conformance_checker.spdx3_utils.get_dependency_relationships_completeness">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_dependency_relationships_completeness</span><span class="p">(</span>
+    <span class="n">object_set</span><span class="p">:</span> <span class="n">spdx3</span><span class="o">.</span><span class="n">SHACLObjectSet</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Extract the completeness attribute for all dependency</span>
+<span class="sd">    relationships ('contains', 'dependsOn') in the SPDX 3 document.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        dict[str, list[str]]: A dictionary mapping all relationship's</span>
+<span class="sd">        from_id to a list of all completeness attributes.</span>
+<span class="sd">    """</span>
+    <span class="n">completeness_map</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="n">object_set</span><span class="o">.</span><span class="n">foreach_type</span><span class="p">(</span><span class="n">spdx3</span><span class="o">.</span><span class="n">Relationship</span><span class="p">):</span>
+        <span class="n">rel_type</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="s2">"relationshipType"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">rel_type</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="c1"># Remove the IRI prefix of entry name before compare</span>
+        <span class="n">rel_type_name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">rel_type</span><span class="p">)</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s2">"/"</span><span class="p">,</span> <span class="n">maxsplit</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">rel_type_name</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"contains"</span><span class="p">,</span> <span class="s2">"dependsOn"</span><span class="p">):</span>
+            <span class="n">from_</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="s2">"from_"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="n">from_id</span> <span class="o">=</span> <span class="n">from_</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">from_</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">from_</span><span class="p">,</span> <span class="s2">"spdxId"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">from_id</span><span class="p">:</span>
+                <span class="n">completeness_iri</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="s2">"completeness"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+                <span class="n">completeness_val</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="nb">str</span><span class="p">(</span><span class="n">completeness_iri</span><span class="p">)</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s2">"/"</span><span class="p">,</span> <span class="n">maxsplit</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="n">completeness_iri</span>
+                    <span class="k">else</span> <span class="s2">"noAssertion"</span>
+                <span class="p">)</span>
+                <span class="k">if</span> <span class="n">completeness_val</span><span class="p">:</span>
+                    <span class="n">completeness_map</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">from_id</span><span class="p">,</span> <span class="p">[])</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                        <span class="nb">str</span><span class="p">(</span><span class="n">completeness_val</span><span class="p">)</span>
+                    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">completeness_map</span></div>
+
+
+
+<div class="viewcode-block" id="parse_spdx3_file">
+<a class="viewcode-back" href="../../ntia_conformance_checker.html#ntia_conformance_checker.spdx3_utils.parse_spdx3_file">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">parse_spdx3_file</span><span class="p">(</span><span class="n">file_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">spdx3</span><span class="o">.</span><span class="n">SHACLObjectSet</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Parse SPDX 3 SBOM document.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        tuple[spdx3.SHACLObjectSet | None, list[str]]: A tuple containing the parsed</span>
+<span class="sd">            SHACLObjectSet (or None if parsing failed) and a list of parsing error strings.</span>
+<span class="sd">    """</span>
+    <span class="n">parsing_errors</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">file_path</span> <span class="ow">or</span> <span class="nb">str</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">==</span> <span class="s2">""</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">"No file path provided."</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="n">parsing_errors</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">file_path</span><span class="p">):</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">"File not found: </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">file_path</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="n">parsing_errors</span>
+
+    <span class="n">object_set</span><span class="p">:</span> <span class="n">spdx3</span><span class="o">.</span><span class="n">SHACLObjectSet</span> <span class="o">=</span> <span class="n">spdx3</span><span class="o">.</span><span class="n">SHACLObjectSet</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="s2">"rb"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">spdx3</span><span class="o">.</span><span class="n">JSONLDDeserializer</span><span class="p">()</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">object_set</span><span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="n">json</span><span class="o">.</span><span class="n">JSONDecodeError</span><span class="p">)</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">"SPDX3 deserialization failed: </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">err</span><span class="p">)</span>
+        <span class="n">parsing_errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">err</span><span class="p">))</span>
+        <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="n">parsing_errors</span>
+
+    <span class="k">return</span> <span class="n">object_set</span><span class="p">,</span> <span class="n">parsing_errors</span></div>
 
 </pre></div>
 
